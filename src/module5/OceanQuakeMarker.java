@@ -1,6 +1,10 @@
 package module5;
 
+import java.util.List;
+
+import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.data.PointFeature;
+import de.fhpotsdam.unfolding.marker.Marker;
 import processing.core.PGraphics;
 
 /** Implements a visual marker for ocean earthquakes on an earthquake map
@@ -23,6 +27,14 @@ public class OceanQuakeMarker extends EarthquakeMarker {
 	@Override
 	public void drawEarthquake(PGraphics pg, float x, float y) {
 		pg.rect(x-radius, y-radius, 2*radius, 2*radius);
+	}
+
+
+	@Override
+	public void drawLines(PGraphics pg, List<Marker> threatened,
+			UnfoldingMap map) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 

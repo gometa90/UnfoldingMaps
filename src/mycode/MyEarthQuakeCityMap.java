@@ -145,15 +145,20 @@ public class MyEarthQuakeCityMap extends PApplet {
 		
 		map.addMarkers(eqMarkers);
 		
+		//Setting the default background
+		background(10);
 	}
 	
 	
 	@Override
 	public void draw() {
 		//Setting the background
-		background(10);
+		
 		map.draw();
+		//Add Key
 		addKey();
+		//DrawButttons
+		drawButtons();
 		
 	}
 	
@@ -224,5 +229,30 @@ public class MyEarthQuakeCityMap extends PApplet {
 		text("4.0+ magnitude",90,300);
 		text("Below 4.0",90,350);
 	}
+	
+	private void drawButtons(){
+		fill(255,255,255);
+		rect(300,75,25,25);
+		fill(100,100,100);
+		rect(300,125,25,25);
+		
+	}
+
+
+	@Override
+	public void mouseReleased() {
+		// TODO Auto-generated method stub
+		super.mouseReleased();
+		//Check if buttons are pressed
+		if((mouseX > 300 && mouseX < 325) && (mouseY > 75 && mouseY < 100)){
+			background(255,255,255);
+		}else{
+			if((mouseX > 300 && mouseX < 325) && (mouseY > 125 && mouseY < 150)){
+				background(100,100,100);
+			}
+		}
+	}
+	
+	
 	
 }

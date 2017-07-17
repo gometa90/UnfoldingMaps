@@ -1,6 +1,10 @@
 package module5;
 
+import java.util.List;
+
+import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.data.PointFeature;
+import de.fhpotsdam.unfolding.marker.Marker;
 import processing.core.PGraphics;
 
 /** Implements a visual marker for land earthquakes on an earthquake map
@@ -33,6 +37,14 @@ public class LandQuakeMarker extends EarthquakeMarker {
 	// Get the country the earthquake is in
 	public String getCountry() {
 		return (String) getProperty("country");
+	}
+
+
+	@Override
+	public void drawLines(PGraphics pg, List<Marker> threatened,
+			UnfoldingMap map) {
+		// TODO Auto-generated method stub
+		
 	}
 
 		

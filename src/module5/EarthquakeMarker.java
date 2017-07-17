@@ -84,6 +84,9 @@ public abstract class EarthquakeMarker extends CommonMarker
 			
 		}
 		
+		//Show title
+		showTitle( pg,  x,  y);
+		
 		// reset to previous styling
 		pg.popStyle();
 		
@@ -93,7 +96,17 @@ public abstract class EarthquakeMarker extends CommonMarker
 	@Override
 	public void showTitle(PGraphics pg, float x, float y)
 	{
-		// TODO: Implement this method
+		if(this.isSelected()){
+			//Obtain the city features
+			String eqTitle = "Title: "+this.getStringProperty("title");
+			//Draw the square with the information about the city
+			pg.fill(250, 250, 76);;
+			pg.rect(x, y, 120, 40);
+			pg.fill(0,0,0);
+			pg.textSize(9);
+			pg.text(eqTitle, x+5, y+10,120,40);
+		}
+		
 		
 	}
 

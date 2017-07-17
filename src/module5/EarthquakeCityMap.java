@@ -13,6 +13,7 @@ import de.fhpotsdam.unfolding.marker.Marker;
 import de.fhpotsdam.unfolding.marker.MultiMarker;
 import de.fhpotsdam.unfolding.providers.Google;
 import de.fhpotsdam.unfolding.providers.MBTilesMapProvider;
+import de.fhpotsdam.unfolding.providers.Microsoft;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 import parsing.ParseFeed;
 import processing.core.PApplet;
@@ -54,6 +55,8 @@ public class EarthquakeCityMap extends PApplet {
 	private List<Marker> cityMarkers;
 	// Markers for each earthquake
 	private List<Marker> quakeMarkers;
+	//Auxiliary list of both markers
+	private List<Marker> cityAndQuakeMarkers = new ArrayList<Marker>();
 
 	// A List of country markers
 	private List<Marker> countryMarkers;
@@ -70,9 +73,9 @@ public class EarthquakeCityMap extends PApplet {
 		    earthquakesURL = "2.5_week.atom";  // The same feed, but saved August 7, 2015
 		}
 		else {
-			map = new UnfoldingMap(this, 200, 50, 650, 600, new Google.GoogleMapProvider());
+			map = new UnfoldingMap(this, 200, 50, 650, 600, new Microsoft.RoadProvider());
 			// IF YOU WANT TO TEST WITH A LOCAL FILE, uncomment the next line
-		    //earthquakesURL = "2.5_week.atom";
+		    earthquakesURL = "2.5_week.atom";
 		}
 		MapUtils.createDefaultEventDispatcher(this, map);
 		
@@ -113,6 +116,10 @@ public class EarthquakeCityMap extends PApplet {
 	    map.addMarkers(quakeMarkers);
 	    map.addMarkers(cityMarkers);
 	    
+	    
+	    //auxiliary List containing all markers, cities and quakes.
+		cityAndQuakeMarkers.addAll(cityMarkers);
+		cityAndQuakeMarkers.addAll(quakeMarkers);
 	}  // End setup
 	
 	
@@ -120,6 +127,7 @@ public class EarthquakeCityMap extends PApplet {
 		background(0);
 		map.draw();
 		addKey();
+		//Draw lines between cities and eq if necessary
 		
 	}
 	
@@ -145,7 +153,12 @@ public class EarthquakeCityMap extends PApplet {
 	// 
 	private void selectMarkerIfHover(List<Marker> markers)
 	{
-		// TODO: Implement this method
+		for (Marker marker : markers) {
+			if(marker.isInside(map, mouseX	, mouseY)){
+				marker.setSelected(true);
+				lastSelected = (CommonMarker) marker;
+			}
+		}
 	}
 	
 	/** The event handler for mouse clicks
@@ -154,12 +167,130 @@ public class EarthquakeCityMap extends PApplet {
 	 * where the city is in the threat circle
 	 */
 	@Override
-	public void mouseClicked()
-	{
-		// TODO: Implement this method
-		// Hint: You probably want a helper method or two to keep this code
-		// from getting too long/disorganized
+	public void mouseClicked() {
+		//Determine whether any marker has been selected in this last click
+		for (Marker marker : cityAndQuakeMarkers) {
+			if(marker.isSelected()){
+				lastClicked = (CommonMarker) marker;
+			}
+				
+		}
+		
+		if(lastClicked == null){
+			unhideMarkers();
+		}else{
+			Location lastSelectedLocation = lastClicked.getLocation();
+			//Depending on the class, do what correspond
+			if(lastClicked instanceof EarthquakeMarker){
+				//Unhide all quake markers except the selected one
+				for (Marker eqMarker : quakeMarkers) {
+					if(!eqMarker.equals(lastClicked)){
+						eqMarker.setHidden(true);
+					}
+				}
+				//Also hide all cities not threatened for this EarthQuake
+				//Determining the threat circle of this eq
+				double threatRadius = ((EarthquakeMarker) lastClicked).threatCircle();
+				for (Marker cityMarker : cityMarkers) {
+					//Distance to the eq from this city
+					double distance = cityMarker.getDistanceTo(lastSelectedLocation);
+					//If the distance between markers is more than the threat radius
+					//then hide this marker, if not, unhide it
+					if(distance > threatRadius){
+						cityMarker.setHidden(true);
+					}else{
+						cityMarker.setHidden(false);
+						
+						}
+				}
+			}
+			//Do it similar for cityMarkers
+			if(lastClicked instanceof CityMarker){
+				//Hide all other cities except the selected one
+				for (Marker cityMarker : cityMarkers) {
+					if(!cityMarker.equals(lastClicked)){
+						cityMarker.setHidden(true);
+					}
+				}
+				//Check if some eq has threatened the city, and only show those ones.
+				for (Marker eqMarker : quakeMarkers) {
+					double threatCircle = ((EarthquakeMarker) eqMarker).threatCircle();
+					double distance = eqMarker.getDistanceTo(lastSelectedLocation);
+					if(distance > threatCircle){
+						eqMarker.setHidden(true);
+					}else{
+						eqMarker.setHidden(false);
+					}
+				}
+			}
+		}
+		//deselect all
+		lastClicked = null;
+		deselectMarkers();
 	}
+	
+//	@Override
+//	public void mouseClicked()
+//	{
+//		System.out.println("Mouse Clicked");
+//		// Hint: You probably want a helper method or two to keep this code
+//		// from getting too long/disorganized
+//		
+//		cityAndQuakeMarkers.addAll(cityMarkers);
+//		cityAndQuakeMarkers.addAll(quakeMarkers);
+//		//Checks whether lastClicked is null or not. If it is null, we have to show
+//		//that markers and the affected near ones. If one was selected, we have to
+//		//deselect this and show all.
+//		
+//		if(lastClicked != null){
+//			//Put it to null and show all
+//			lastClicked = null;
+//			unhideMarkers();
+//		}else{
+//			//Determine which marker is selected is any
+//			for (Marker marker : cityAndQuakeMarkers) {
+//				if(marker.isSelected()){
+//					lastClicked = (CommonMarker) marker;
+//				}
+//			}
+//			
+//			//If any
+//			if(lastClicked != null){
+//			//Once found the selected one, we have to calculate the affected neigh-
+//			//borhood
+//			Location clickedMarkerLocation = lastClicked.getLocation();
+//			//If the lasClicked is a EarthquakeMarker
+//			if(lastClicked instanceof EarthquakeMarker){
+//				double threatCircleRadius = ((EarthquakeMarker) lastClicked).threatCircle();
+//				for (Marker cityMarker : cityMarkers) {
+//					//Check if the distance is less than the threat circle
+//					double distanceToEq = cityMarker.getDistanceTo(clickedMarkerLocation);
+//					if(distanceToEq > threatCircleRadius){
+//						cityMarker.setHidden(true);
+//					}else{
+//						cityMarker.setHidden(false);
+//					}
+//				}
+//			}
+//			if(lastClicked instanceof CityMarker){
+//				//loop over eqmarkers to determine all eq who contains in its 
+//				//threatcircle this city
+//				for (Marker quakeMarker : quakeMarkers) {
+//					double quakeThreatCircle = ((EarthquakeMarker) quakeMarker).threatCircle();
+//					double dist = quakeMarker.getDistanceTo(clickedMarkerLocation);
+//					if(dist > quakeThreatCircle){
+//						quakeMarker.setHidden(true);
+//					}else{quakeMarker.setHidden(false);}
+//				}
+//				//Also we have to not show all the cities except the selected one
+//				for (Marker cityMarker : cityMarkers) {
+//						cityMarker.setHidden(true);
+//				}
+//				lastSelected.setHidden(false);
+//			}
+//		}
+//		}
+//	}
 	
 	
 	// loop over and unhide all markers
@@ -173,6 +304,16 @@ public class EarthquakeCityMap extends PApplet {
 		}
 	}
 	
+	private void deselectMarkers() {
+		for(Marker marker : quakeMarkers) {
+			marker.setSelected(false);
+		}
+			
+		for(Marker marker : cityMarkers) {
+			marker.setSelected(false);
+		}
+	}
+
 	// helper method to draw key in GUI
 	private void addKey() {	
 		// Remember you can use Processing's graphics methods here
@@ -314,5 +455,5 @@ public class EarthquakeCityMap extends PApplet {
 		}
 		return false;
 	}
-
+	
 }
