@@ -14,9 +14,11 @@ import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.marker.AbstractShapeMarker;
 import de.fhpotsdam.unfolding.marker.Marker;
 import de.fhpotsdam.unfolding.marker.MultiMarker;
-import de.fhpotsdam.unfolding.providers.Google;
 import de.fhpotsdam.unfolding.providers.MBTilesMapProvider;
+import de.fhpotsdam.unfolding.providers.Microsoft;
+import de.fhpotsdam.unfolding.utils.GeoUtils;
 import de.fhpotsdam.unfolding.utils.MapUtils;
+import de.fhpotsdam.unfolding.utils.ScreenPosition;
 
 /**
  * EarthquakeCityMap An application with an interactive map displaying
@@ -77,13 +79,14 @@ public class EarthquakeCityMap extends PApplet {
 		if (offline) {
 			map = new UnfoldingMap(this, 200, 50, 650, 600,
 					new MBTilesMapProvider(mbTilesString));
-			earthquakesURL = "2.5_week.atom"; // The same feed, but saved August
-												// 7, 2015
+			// earthquakesURL = "2.5_week.atom"; // The same feed, but saved
+			// August
+			// 7, 2015
 		} else {
 			map = new UnfoldingMap(this, 200, 50, 650, 600,
-					new Google.GoogleMapProvider());
+					new Microsoft.HybridProvider());
 			// IF YOU WANT TO TEST WITH A LOCAL FILE, uncomment the next line
-			// earthquakesURL = "2.5_week.atom";
+			earthquakesURL = "2.5_week.atom";
 		}
 		MapUtils.createDefaultEventDispatcher(this, map);
 
@@ -135,7 +138,7 @@ public class EarthquakeCityMap extends PApplet {
 		map.addMarkers(cityMarkers);
 
 		// Check if sortAndPrint eqmarkers is working
-		sortAndPrint(5);
+		// sortAndPrint(5);
 
 	} // End setup
 
@@ -143,12 +146,9 @@ public class EarthquakeCityMap extends PApplet {
 		background(0);
 		map.draw();
 		addKey();
+		drawThreatCircle();
 
 	}
-
-	// TODO: Add the method:
-	// private void sortAndPrint(int numToPrint)
-	// and then call that method from setUp
 
 	/**
 	 * Event handler that gets called automatically when the mouse moves.
@@ -183,6 +183,136 @@ public class EarthquakeCityMap extends PApplet {
 		}
 	}
 
+	@Override
+	public void keyTyped() {
+		super.keyTyped();
+
+		// Functionality: show only certain types of markers (city and quakes)
+		// when a letter is pressed.
+		switch (key) {
+		case 'C':
+			showOnlyCities();
+			break;
+
+		case 'c':
+			showOnlyCities();
+			break;
+
+		case 'Q':
+			showOnlyQuakes();
+			break;
+
+		case 'q':
+			showOnlyQuakes();
+			break;
+
+		case 'S':
+			showShallowQuakes();
+			break;
+
+		case 's':
+			showShallowQuakes();
+			break;
+
+		case 'I':
+			showIntermediateQuakes();
+			break;
+
+		case 'i':
+			showIntermediateQuakes();
+			break;
+
+		case 'D':
+			showDeepQuakes();
+			break;
+
+		case 'd':
+			showDeepQuakes();
+			break;
+
+		default:
+			break;
+		}
+
+	}
+
+	@Override
+	public void keyReleased() {
+		super.keyReleased();
+		unhideMarkers();
+	}
+
+	// -----------------------HELPER METHODS FOR KEYBOARD FUNCTIONALITY
+	// --------------------------
+
+	private void showOnlyCities() {
+		for (Marker marker : quakeMarkers) {
+			marker.setHidden(true);
+		}
+
+		for (Marker marker : cityMarkers) {
+			marker.setHidden(false);
+		}
+	}
+
+	private void showOnlyQuakes() {
+		for (Marker marker : quakeMarkers) {
+			marker.setHidden(false);
+		}
+
+		for (Marker marker : cityMarkers) {
+			marker.setHidden(true);
+		}
+	}
+
+	private void showShallowQuakes() {
+		for (Marker marker : quakeMarkers) {
+			float depth = ((EarthquakeMarker) marker).getDepth();
+			if (depth < EarthquakeMarker.THRESHOLD_INTERMEDIATE) {
+				marker.setHidden(false);
+			} else {
+				marker.setHidden(true);
+			}
+		}
+
+		for (Marker marker : cityMarkers) {
+			marker.setHidden(true);
+		}
+	}
+
+	private void showIntermediateQuakes() {
+		for (Marker marker : quakeMarkers) {
+			float depth = ((EarthquakeMarker) marker).getDepth();
+			if (depth < EarthquakeMarker.THRESHOLD_DEEP
+					&& depth > EarthquakeMarker.THRESHOLD_INTERMEDIATE) {
+				marker.setHidden(false);
+			} else {
+				marker.setHidden(true);
+			}
+		}
+
+		for (Marker marker : cityMarkers) {
+			marker.setHidden(true);
+		}
+	}
+
+	private void showDeepQuakes() {
+		for (Marker marker : quakeMarkers) {
+			float depth = ((EarthquakeMarker) marker).getDepth();
+			if (depth >= EarthquakeMarker.THRESHOLD_DEEP) {
+				marker.setHidden(false);
+			} else {
+				marker.setHidden(true);
+			}
+		}
+
+		for (Marker marker : cityMarkers) {
+			marker.setHidden(true);
+		}
+	}
+
+	// -------------------------------------------------------------------------------------------
+
 	/**
 	 * The event handler for mouse clicks It will display an earthquake and its
 	 * threat circle of cities Or if a city is clicked, it will display all the
@@ -192,6 +322,7 @@ public class EarthquakeCityMap extends PApplet {
 	public void mouseClicked() {
 		if (lastClicked != null) {
 			unhideMarkers();
+			unclickMarkers();
 			lastClicked = null;
 		} else if (lastClicked == null) {
 			checkEarthquakesForClick();
@@ -206,7 +337,7 @@ public class EarthquakeCityMap extends PApplet {
 	private void checkCitiesForClick() {
 		if (lastClicked != null)
 			return;
-		// Loop over the earthquake markers to see if one of them is selected
+		// Loop over the city markers to see if one of them is selected
 		for (Marker marker : cityMarkers) {
 			if (!marker.isHidden() && marker.isInside(map, mouseX, mouseY)) {
 				lastClicked = (CommonMarker) marker;
@@ -238,6 +369,7 @@ public class EarthquakeCityMap extends PApplet {
 			EarthquakeMarker marker = (EarthquakeMarker) m;
 			if (!marker.isHidden() && marker.isInside(map, mouseX, mouseY)) {
 				lastClicked = marker;
+				lastClicked.setClicked(true);
 				// Hide all the other earthquakes and hide
 				for (Marker mhide : quakeMarkers) {
 					if (mhide != lastClicked) {
@@ -253,6 +385,7 @@ public class EarthquakeCityMap extends PApplet {
 				return;
 			}
 		}
+
 	}
 
 	// loop over and unhide all markers
@@ -266,15 +399,26 @@ public class EarthquakeCityMap extends PApplet {
 		}
 	}
 
-	// loop over and unhide all markers
+	// loop over and hide all markers
 	private void hideMarkers() {
 		for (Marker marker : quakeMarkers) {
 			marker.setHidden(true);
 		}
 
-		// for (Marker marker : cityMarkers) {
-		// marker.setHidden(true);
-		// }
+		for (Marker marker : cityMarkers) {
+			marker.setHidden(true);
+		}
+	}
+
+	// loop over and unhide all markers
+	private void unclickMarkers() {
+		for (Marker marker : quakeMarkers) {
+			((CommonMarker) marker).setClicked(false);
+		}
+
+		for (Marker marker : cityMarkers) {
+			((CommonMarker) marker).setClicked(false);
+		}
 	}
 
 	// helper method to draw key in GUI
@@ -451,4 +595,32 @@ public class EarthquakeCityMap extends PApplet {
 		}
 	}
 
+	// WEEK 6. IMPROVEMENTS: Draw the threatCircle if this eqmarker is selected
+	private void drawThreatCircle() {
+		// Search for the clicked one
+		EarthquakeMarker eqClicked = null;
+		for (Marker eqMarker : quakeMarkers) {
+			if (((EarthquakeMarker) eqMarker).clicked) {
+				eqClicked = (EarthquakeMarker) eqMarker;
+			}
+		}
+		if (eqClicked != null && eqClicked.clicked) {
+			Location mainLocation = eqClicked.getLocation();
+			ScreenPosition pos = map.getScreenPosition(mainLocation);
+			float kmLength = getDistance(mainLocation,
+					(float) eqClicked.threatCircle());
+			fill(255, 128, 128, 128);
+			ellipse(pos.x, pos.y, kmLength, kmLength);
+			map.zoomAndPanTo(5, mainLocation);
+		}
+	}
+
+	// WEEK 6. HELPER METHOD to converts km in pixels
+	public float getDistance(Location mainLocation, float kmLength) {
+		Location tempLocation = GeoUtils.getDestinationLocation(mainLocation,
+				90, kmLength);
+		ScreenPosition pos1 = map.getScreenPosition(mainLocation);
+		ScreenPosition pos2 = map.getScreenPosition(tempLocation);
+		return dist(pos1.x, pos1.y, pos2.x, pos2.y);
+	}
 }
