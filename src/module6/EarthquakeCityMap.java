@@ -1,7 +1,6 @@
 package module6;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import parsing.ParseFeed;
@@ -400,15 +399,15 @@ public class EarthquakeCityMap extends PApplet {
 	}
 
 	// loop over and hide all markers
-	private void hideMarkers() {
-		for (Marker marker : quakeMarkers) {
-			marker.setHidden(true);
-		}
-
-		for (Marker marker : cityMarkers) {
-			marker.setHidden(true);
-		}
-	}
+	// private void hideMarkers() {
+	// for (Marker marker : quakeMarkers) {
+	// marker.setHidden(true);
+	// }
+	//
+	// for (Marker marker : cityMarkers) {
+	// marker.setHidden(true);
+	// }
+	// }
 
 	// loop over and unhide all markers
 	private void unclickMarkers() {
@@ -567,33 +566,33 @@ public class EarthquakeCityMap extends PApplet {
 		return false;
 	}
 
-	// Week6
-	// Method that sort earthquakes in an inverse way (highest to lowest) and
-	// show a limited
-	// number of it in the map.
-	private void sortAndPrint(int numToPrint) {
-		// Sort the list of quake markers. before that we have to convert the
-		// list in an array for a more comfortable handling of data
-		Collections.sort(quakeMarkers, null);
-		Object[] sortedQuakesArray = quakeMarkers.toArray();
-		EarthquakeMarker[] limitedQuakesArray = new EarthquakeMarker[numToPrint];
-		for (int i = 0; i < numToPrint; i++) {
-			limitedQuakesArray[i] = (EarthquakeMarker) sortedQuakesArray[i];
-		}
-		for (int i = 0; i < limitedQuakesArray.length; i++) {
-			System.out.println(limitedQuakesArray[i]);
-		}
-		// Once we have selected the numToprint-th elements, contrast and hide
-		// all except them
-		hideMarkers();
-		for (Marker earthquakeMarker : quakeMarkers) {
-			for (int i = 0; i < limitedQuakesArray.length - 1; i++) {
-				if (limitedQuakesArray[i].equals(earthquakeMarker)) {
-					earthquakeMarker.setHidden(false);
-				}
-			}
-		}
-	}
+	// // Week6
+	// // Method that sort earthquakes in an inverse way (highest to lowest) and
+	// // show a limited
+	// // number of it in the map.
+	// private void sortAndPrint(int numToPrint) {
+	// // Sort the list of quake markers. before that we have to convert the
+	// // list in an array for a more comfortable handling of data
+	// Collections.sort(quakeMarkers, null);
+	// Object[] sortedQuakesArray = quakeMarkers.toArray();
+	// EarthquakeMarker[] limitedQuakesArray = new EarthquakeMarker[numToPrint];
+	// for (int i = 0; i < numToPrint; i++) {
+	// limitedQuakesArray[i] = (EarthquakeMarker) sortedQuakesArray[i];
+	// }
+	// for (int i = 0; i < limitedQuakesArray.length; i++) {
+	// System.out.println(limitedQuakesArray[i]);
+	// }
+	// // Once we have selected the numToprint-th elements, contrast and hide
+	// // all except them
+	// hideMarkers();
+	// for (Marker earthquakeMarker : quakeMarkers) {
+	// for (int i = 0; i < limitedQuakesArray.length - 1; i++) {
+	// if (limitedQuakesArray[i].equals(earthquakeMarker)) {
+	// earthquakeMarker.setHidden(false);
+	// }
+	// }
+	// }
+	// }
 
 	// WEEK 6. IMPROVEMENTS: Draw the threatCircle if this eqmarker is selected
 	private void drawThreatCircle() {
@@ -623,4 +622,5 @@ public class EarthquakeCityMap extends PApplet {
 		ScreenPosition pos2 = map.getScreenPosition(tempLocation);
 		return dist(pos1.x, pos1.y, pos2.x, pos2.y);
 	}
+
 }
